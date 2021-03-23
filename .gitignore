@@ -127,3 +127,21 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+.vscode
+.catkin_workspace
+*.bag
+*.pth
+*.pkl
+*.swp
+*.pyc
+*.graph
+*.so
+*.png
+*.wav
+*.zip
+*.jpg
+*.mat
+*.pdf
+*.csv
+checkpoint.pth.tar
