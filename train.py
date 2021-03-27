@@ -8,9 +8,7 @@ from torchvision.models.resnet import ResNet
 from torch.utils import model_zoo
 import random
 import sys
-import copy
 import math
-import pandas as pd
 
 import torchvision.transforms as transforms
 
@@ -24,10 +22,9 @@ import numpy as np
 import time
 import os
 from model import *
+from Dataloader import *
 import argparse
 
-image_net_mean = np.array([0.485, 0.456, 0.406])
-image_net_std  = np.array([0.229, 0.224, 0.225])
 
 parser = argparse.ArgumentParser(description='Set up')
 parser.add_argument('--data_dir', type=str, default = None)
@@ -39,50 +36,9 @@ args = parser.parse_args()
 if os.path.isdir(args.data_dir + '/weight') == False:
     os.mkdir(args.data_dir + '/weight')
 
-class parallel_jaw_based_grasping_dataset(Dataset):
-    name = []
-    def __init__(self, data_dir, scale=1/(6.4)):
-        self.data_dir = data_dir
-        self.scale = 1/(6.4)
-        f = open(self.data_dir+"/train.txt", "r")
-        for i, line in enumerate(f):
-              self.name.append(line.replace("\n", ""))
-    def __len__(self):
-        return len(self.name)
-    def __getitem__(self, idx):
-        idx_name = self.name[idx]
-        color_img = cv2.imread(self.data_dir+"/color/color"+idx_name)
-        color_img = color_img[:,:,[2,1,0]]
-        depth_img = cv2.imread(self.data_dir+"/depth/depth"+idx_name, 0)
-
-        label_img = cv2.imread(self.data_dir+"/label/label"+idx_name, cv2.IMREAD_GRAYSCALE)
-        # uint8 -> float
-        color = (color_img/255.).astype(float)
-        # BGR -> RGB and normalize
-        color_rgb = np.zeros(color.shape)
-        for i in range(3):
-            color_rgb[:, :, i] = (color[:, :, 2-i]-image_net_mean[i])/image_net_std[i]
-        depth = (depth_img/1000.).astype(float) # to meters
-        # SR300 depth range
-        depth = np.clip(depth, 0.0, 1.2)
-        # Duplicate channel and normalize
-        depth_3c = np.zeros(color.shape)
-        for i in range(3):
-            depth_3c[:, :, i] = (depth[:, :]-image_net_mean[i])/image_net_std[i]
-        # Unlabeled -> 2; unsuctionable -> 0; suctionable -> 1
-        label = np.round(label_img/255.*2.).astype(float)
-        # Already 40*40
-        label = cv2.resize(label, (int(32), int(32)))
-        transform = transforms.Compose([
-                        transforms.ToTensor(),
-                    ])
-        color_tensor = transform(color_rgb).float()
-        depth_tensor = transform(depth_3c).float()
-        label_tensor = transform(label).float()
-        sample = {"color": color_tensor, "depth": depth_tensor, "label": label_tensor}
-        return sample
 
 dataset = parallel_jaw_based_grasping_dataset(args.data_dir)
+dataloader = DataLoader(dataset, batch_size = args.batch_size, shuffle = True, num_workers = 8)
 
 class_weight = torch.ones(3)
 class_weight[2] = 0
@@ -92,7 +48,6 @@ criterion = nn.CrossEntropyLoss(class_weight).cuda()
 optimizer = optim.SGD(net.parameters(), lr = 1e-3, momentum=0.99)
 scheduler = optim.lr_scheduler.StepLR(optimizer, step_size = 25, gamma = 0.1)
 
-dataloader = DataLoader(dataset, batch_size = args.batch_size, shuffle = True, num_workers = 8)
 
 
 loss_l = []
