@@ -18,7 +18,7 @@ Our method of labeling is to label the grasping pose of parallel gripper . ( gre
 
 This command will create the lable images from json files . And create the training and testing list .
 ```bash
-$ python3 data_prepross.py --data_dir="your own path"
+$ python3 data_preprocess.py --data_dir="your own path"
 ```
 ## II. Train
 ```bash
