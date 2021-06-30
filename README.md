@@ -14,7 +14,7 @@ $ python3 rosbag2img.py --bags_dir="your own path"
 
 ## II. Labeling and generate datasets
 Our method of labeling is to label the grasping pose of parallel gripper . ( green line )
-![Dataset](figure/dataset.png)
+![Dataset](figure/datasets.png)
 
 This command will create the lable images from json files . And create the training and testing list .
 ```bash
