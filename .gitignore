@@ -137,11 +137,7 @@ dmypy.json
 *.pyc
 *.graph
 *.so
-*.png
 *.wav
 *.zip
-*.jpg
 *.mat
-*.pdf
-*.csv
 checkpoint.pth.tar
