@@ -40,9 +40,9 @@ if os.path.isdir(args.data_dir + '/weight') == False:
 dataset = parallel_jaw_based_grasping_dataset(args.data_dir)
 dataloader = DataLoader(dataset, batch_size = args.batch_size, shuffle = True, num_workers = 8)
 
-class_weight = torch.ones(3)
-class_weight[2] = 0
-net = GraspNet(3)
+class_weight = torch.ones(2)
+# class_weight[2] = 0
+net = GraspNet(2)
 net = net.cuda()
 criterion = nn.CrossEntropyLoss(class_weight).cuda()
 optimizer = optim.SGD(net.parameters(), lr = 1e-3, momentum=0.99)
@@ -62,7 +62,7 @@ for epoch in range(args.epoch):
         label = sampled_batched['label'].cuda().long()
         predict = net(color, depth)
 
-        loss = criterion(predict.view(len(sampled_batched['color']), 3,32*32), label.view(len(sampled_batched['color']), 32*32))
+        loss = criterion(predict.view(len(sampled_batched['color']), 2,32*32), label.view(len(sampled_batched['color']), 32*32))
         loss.backward()
         loss_sum += loss.detach().cpu().numpy()
         optimizer.step()
